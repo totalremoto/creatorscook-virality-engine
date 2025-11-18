@@ -1,0 +1,16 @@
+flowchart TD
+    A[User visits CreatorsCook] --> B[Check Authentication]
+    B --> C{Authenticated}
+    C -->|No| D[Redirect to Login]
+    C -->|Yes| E[Dashboard]
+    E --> F[Enter Product URL]
+    F --> G[API Call products create]
+    G --> H[Background Job Ingestion and Analysis]
+    H --> I[Results Stored in Supabase]
+    I --> J[Product Container Page]
+    J --> K[Open Compliant Co Pilot Editor]
+    K --> L[Call Chat API]
+    L --> M[Receive LLM Response]
+    M --> N[Display Suggestions]
+    E --> O[Manage Subscription]
+    O --> P[Stripe Integration]
