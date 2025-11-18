@@ -1,4 +1,4 @@
-import { createClient } from './supabase';
+import { createSupabaseServerClient } from './supabase-server';
 import { scrapingManager, ScrapingResult, ScrapedReviewData } from './scraping-service';
 import { updateProductContainerStatus } from './product-service';
 import { angleReasoningService } from './angle-reasoning-service';
@@ -32,7 +32,9 @@ export interface ProcessedInsights {
 }
 
 export class IngestionService {
-  private supabase = createClient('service');
+  private async getSupabase() {
+    return createSupabaseServerClient();
+  }
 
   // Start the ingestion process for a product container
   async startIngestion(productContainerId: string, productUrl: string): Promise<string> {
@@ -281,9 +283,11 @@ export class IngestionService {
   // Store insights in the database
   private async storeInsights(productContainerId: string, insights: ProcessedInsights): Promise<void> {
     try {
+      const supabase = await this.getSupabase();
+      
       // Store pain points
       for (const painPoint of insights.pain_points) {
-        await this.supabase
+        await supabase
           .from('pain_points')
           .insert({
             product_container_id: productContainerId,
@@ -296,7 +300,7 @@ export class IngestionService {
 
       // Store delight factors
       for (const delightFactor of insights.delight_factors) {
-        await this.supabase
+        await supabase
           .from('delight_factors')
           .insert({
             product_container_id: productContainerId,

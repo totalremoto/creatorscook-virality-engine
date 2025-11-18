@@ -1,4 +1,4 @@
-import { createClient } from './supabase';
+import { createSupabaseServerClient } from './supabase-server';
 import {
   ProductContainer,
   ProductContainerWithAnalysis,
@@ -14,8 +14,8 @@ import {
 } from '@/types/product';
 
 // Get a Supabase client with server-side auth
-function getServerClient() {
-  return createClient('service');
+async function getServerClient() {
+  return createSupabaseServerClient();
 }
 
 // URL validation and platform detection
@@ -55,9 +55,10 @@ export async function createProductContainer(
       return { success: false, error: error || 'Invalid URL' };
     }
 
+    const supabase = await getServerClient();
+
     // Check if user has sufficient credits for external links
     if (platform === 'external') {
-      const supabase = getServerClient();
       const { data: hasCredits } = await supabase.rpc('has_sufficient_credits', {
         p_user_id: userId
       });
@@ -72,8 +73,6 @@ export async function createProductContainer(
       // Consume a credit for external link analysis
       await supabase.rpc('consume_angle_credit', { p_user_id: userId });
     }
-
-    const supabase = getServerClient();
 
     // Create the product container
     const { data, error: insertError } = await supabase
@@ -116,7 +115,7 @@ export async function createProductContainer(
 // Get all product containers for a user
 export async function getUserProductContainers(userId: string): Promise<ProductContainer[]> {
   try {
-    const supabase = getServerClient();
+    const supabase = await getServerClient();
 
     const { data, error } = await supabase
       .from('product_containers')
@@ -142,7 +141,7 @@ export async function getProductContainerWithAnalysis(
   containerId: string
 ): Promise<ProductContainerWithAnalysis | null> {
   try {
-    const supabase = getServerClient();
+    const supabase = await getServerClient();
 
     // Get the product container
     const { data: container, error: containerError } = await supabase
@@ -218,7 +217,7 @@ export async function updateProductContainerStatus(
   additionalData?: Partial<ProductContainer>
 ): Promise<boolean> {
   try {
-    const supabase = getServerClient();
+    const supabase = await getServerClient();
 
     const updateData: Partial<ProductContainer> = {
       status,
@@ -247,7 +246,7 @@ export async function deleteProductContainer(
   containerId: string
 ): Promise<boolean> {
   try {
-    const supabase = getServerClient();
+    const supabase = await getServerClient();
 
     const { error } = await supabase
       .from('product_containers')
@@ -265,7 +264,7 @@ export async function deleteProductContainer(
 // Get user subscription information
 export async function getUserSubscription(userId: string): Promise<UserSubscription | null> {
   try {
-    const supabase = getServerClient();
+    const supabase = await getServerClient();
 
     const { data, error } = await supabase
       .from('user_subscriptions')
@@ -303,7 +302,7 @@ export async function getUserSubscription(userId: string): Promise<UserSubscript
 // Get user analytics
 export async function getUserAnalytics(userId: string): Promise<ProductAnalytics> {
   try {
-    const supabase = getServerClient();
+    const supabase = await getServerClient();
 
     // Get product containers summary
     const { data: products } = await supabase

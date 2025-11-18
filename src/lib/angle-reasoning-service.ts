@@ -1,4 +1,4 @@
-import { createClient } from './supabase';
+import { createSupabaseServerClient } from './supabase-server';
 import { aiService } from './ai-service';
 import { ViralityAnalysisInput, ViralityPackGeneration } from './ai-service';
 import { updateProductContainerStatus } from './product-service';
@@ -11,7 +11,9 @@ export interface AngleReasoningResult {
 }
 
 export class AngleReasoningService {
-  private supabase = createClient('service');
+  private async getSupabase() {
+    return createSupabaseServerClient();
+  }
 
   // Start the angle reasoning process for a product container
   async startAngleReasoning(productContainerId: string): Promise<boolean> {
@@ -21,8 +23,10 @@ export class AngleReasoningService {
       // Update status to analyzing
       await updateProductContainerStatus(productContainerId, 'analyzing');
 
+      const supabase = await this.getSupabase();
+
       // Get the product container and related data
-      const { data: container, error: containerError } = await this.supabase
+      const { data: container, error: containerError } = await supabase
         .from('product_containers')
         .select('*')
         .eq('id', productContainerId)
@@ -34,13 +38,13 @@ export class AngleReasoningService {
 
       // Get pain points and delight factors
       const [painPointsResult, delightFactorsResult] = await Promise.all([
-        this.supabase
+        supabase
           .from('pain_points')
           .select('*')
           .eq('product_container_id', productContainerId)
           .order('mentions', { ascending: false }),
 
-        this.supabase
+        supabase
           .from('delight_factors')
           .select('*')
           .eq('product_container_id', productContainerId)
@@ -133,8 +137,10 @@ export class AngleReasoningService {
     viralityPacks: ViralityPackGeneration[]
   ): Promise<void> {
     try {
+      const supabase = await this.getSupabase();
+      
       // Clear existing virality packs for this container
-      await this.supabase
+      await supabase
         .from('virality_packs')
         .delete()
         .eq('product_container_id', productContainerId);
@@ -152,7 +158,7 @@ export class AngleReasoningService {
         virality_score: pack.virality_score
       }));
 
-      const { error } = await this.supabase
+      const { error } = await supabase
         .from('virality_packs')
         .insert(packsToInsert);
 
@@ -171,7 +177,8 @@ export class AngleReasoningService {
   // Get virality packs for a product container
   async getViralityPacks(productContainerId: string): Promise<ViralityPack[]> {
     try {
-      const { data, error } = await this.supabase
+      const supabase = await this.getSupabase();
+      const { data, error } = await supabase
         .from('virality_packs')
         .select('*')
         .eq('product_container_id', productContainerId)
@@ -201,8 +208,10 @@ export class AngleReasoningService {
     try {
       console.log(`Regenerating virality packs for container ${productContainerId}`);
 
+      const supabase = await this.getSupabase();
+
       // Get the product container and related data
-      const { data: container } = await this.supabase
+      const { data: container } = await supabase
         .from('product_containers')
         .select('*')
         .eq('id', productContainerId)
@@ -214,12 +223,12 @@ export class AngleReasoningService {
 
       // Get pain points and delight factors
       const [painPointsResult, delightFactorsResult] = await Promise.all([
-        this.supabase
+        supabase
           .from('pain_points')
           .select('*')
           .eq('product_container_id', productContainerId),
 
-        this.supabase
+        supabase
           .from('delight_factors')
           .select('*')
           .eq('product_container_id', productContainerId)
@@ -294,7 +303,8 @@ export class AngleReasoningService {
     };
   }> {
     try {
-      const { data: packs } = await this.supabase
+      const supabase = await this.getSupabase();
+      const { data: packs } = await supabase
         .from('virality_packs')
         .select('angle_name, sentiment_score, virality_score')
         .eq('product_container_id', productContainerId);

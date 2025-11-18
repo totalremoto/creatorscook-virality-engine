@@ -93,7 +93,7 @@ CLERK_SECRET_KEY=your_secret_key
 
 # Supabase
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
 
 # AI Integration (Optional)
 OPENAI_API_KEY=your_openai_api_key

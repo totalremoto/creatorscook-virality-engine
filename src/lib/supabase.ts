@@ -1,35 +1,5 @@
-import { createClient } from "@supabase/supabase-js";
-import { auth } from "@clerk/nextjs/server";
+// Re-export client-side Supabase client (safe for client components)
+export { supabase, createClient } from './supabase-client';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  global: {
-    fetch: (url, options = {}) => {
-      return fetch(url, {
-        ...options,
-        cache: "no-store",
-      });
-    },
-  },
-});
-
-export async function createSupabaseServerClient() {
-  const { getToken } = await auth();
-  const token = await getToken();
-
-  return createClient(supabaseUrl, supabaseAnonKey, {
-    global: {
-      headers: {
-        Authorization: token ? `Bearer ${token}` : "",
-      },
-      fetch: (url, options = {}) => {
-        return fetch(url, {
-          ...options,
-          cache: "no-store",
-        });
-      },
-    },
-  });
-}
+// Re-export server-side Supabase client (for server components and API routes)
+export { createSupabaseServerClient } from './supabase-server';

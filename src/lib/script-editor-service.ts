@@ -1,4 +1,4 @@
-import { createClient } from './supabase';
+import { supabase } from './supabase-client';
 import { generateText } from 'ai';
 import { anthropic } from '@ai-sdk/anthropic';
 import { Script, BrandRule, ComplianceFlag, StreamingScriptSuggestion } from '@/types/product';
@@ -28,7 +28,7 @@ export interface ComplianceRule {
 }
 
 export class ScriptEditorService {
-  private supabase = createClient('service');
+  private supabase = supabase;
 
   // TikTok Community Guidelines compliance rules (simplified)
   private readonly tosRules: ComplianceRule[] = [
